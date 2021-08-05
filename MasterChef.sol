@@ -1714,9 +1714,11 @@ contract MasterChef is Ownable {
             return;
         }
         uint256 lpSupply = 0;
-		if (_pid==1) {uint256 lpSupply = pool.totalAmount; } 
+		if (_pid==1) {
+			lpSupply = pool.totalAmount; 
+		} 
 		else {
-		    lpSupply = pool.lpToken.balanceOf(address(this));
+			lpSupply = pool.lpToken.balanceOf(address(this));
 		}
         if (lpSupply == 0) {
             pool.lastRewardBlock = block.number;
@@ -1738,9 +1740,7 @@ contract MasterChef is Ownable {
 		
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
-		if (_pid==1) {
-			pool.totalAmount = pool.totalAmount.add(_amount);			
-		}
+
         updatePool(_pid);
         if (user.amount > 0) {
             uint256 pending = user.amount.mul(pool.accCakePerShare).div(1e12).sub(user.rewardDebt);
@@ -1749,9 +1749,14 @@ contract MasterChef is Ownable {
             }
         }
         if (_amount > 0) {
+            uint256 _before = pool.lpToken.balanceOf(this);
             pool.lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
+	    _amount = pool.lpToken.balanceOf(this).sub(_before);
             user.amount = user.amount.add(_amount);
         }
+	if (_pid==1) {
+	    pool.totalAmount = pool.totalAmount.add(_amount);			
+	}
         user.rewardDebt = user.amount.mul(pool.accCakePerShare).div(1e12);
         emit Deposit(msg.sender, _pid, _amount);
     }
